@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:weekday_selector/weekday_selector.dart';
 
 class CartUI extends StatefulWidget {
   const CartUI({Key? key}) : super(key: key);
@@ -13,6 +16,12 @@ class _CartUIState extends State<CartUI> {
   String _title = 'Tata Tea Gold (1 Kg)';
   double _salePrice = 531;
   double _price = 625;
+  List<bool> days = [true, false, false, false, false, false, false];
+  DateTime? _startDate;
+  String? _startDateString = 'Pick a date';
+
+  saveDataToLocalStorage() {}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,8 +96,8 @@ class _CartUIState extends State<CartUI> {
             ),
             ListTile(
               leading: Icon(Icons.shopping_bag_outlined),
-              title: Text('Quantity'),
-              subtitle: Text('per day'),
+              title: Text('  Quantity'),
+              subtitle: Text('  per day'),
               trailing: Container(
                 decoration: BoxDecoration(
                     border: Border(), borderRadius: BorderRadius.circular(10)),
@@ -122,6 +131,24 @@ class _CartUIState extends State<CartUI> {
                 ),
               ),
             ),
+            Divider(),
+            ListTile(
+                leading: Icon(Icons.repeat_sharp),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('  Repeat'),
+                    WeekdaySelector(
+                      values: days,
+                      onChanged: (day) {
+                        final index = day % 7;
+                        setState(() {
+                          days[index] = !days[index];
+                        });
+                      },
+                    )
+                  ],
+                )),
             Divider(),
             ListTile(
                 onTap: () {
@@ -169,22 +196,35 @@ class _CartUIState extends State<CartUI> {
                           ));
                 },
                 leading: Icon(Icons.replay_circle_filled_outlined),
-                title: Text('Recharge / Top up'),
+                title: Text('  Recharge / Top up'),
                 subtitle: Text(
-                  '$_topup Deliveries',
+                  '  $_topup Deliveries',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 trailing: Icon(Icons.arrow_forward_ios)),
             Divider(),
             ListTile(
-                onTap: null,
+                onTap: () async {
+                  _startDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2015),
+                    lastDate: DateTime(2050),
+                  );
+                  if (_startDate != null)
+                    setState(() {
+                      _startDateString =
+                          DateFormat('dd-MM-yyyy').format(_startDate!);
+                    });
+                },
                 leading: Icon(Icons.calendar_today_outlined),
-                title: Text('Start date'),
+                title: Text('  Start date'),
                 subtitle: Text(
-                  'Tomorrow',
+                  '  $_startDateString',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 trailing: Icon(Icons.arrow_forward_ios)),
+            Divider()
           ],
         ),
       ),
@@ -202,7 +242,76 @@ class _CartUIState extends State<CartUI> {
           width: MediaQuery.of(context).size.width * 0.45,
           height: MediaQuery.of(context).size.height * 0.06,
           child: TextButton(
-            onPressed: null,
+            onPressed: () => showCupertinoDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                      content: Container(
+                        margin: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text(
+                                'ORDER SUMMARY',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text('\nPrice: ₹$_salePrice',
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text('Quantity: $_quantity',
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text('Top up: $_topup Deliveries',
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text('Repeat: $days',
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text('Start date: $_startDateString',
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text(
+                                  '\nFINAL AMOUNT: ₹${_salePrice * _quantity * _topup}',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              saveDataToLocalStorage();
+                            },
+                            child: Text('PROCEED'))
+                      ],
+                    )),
             child: Text('SUBSCRIBE', style: TextStyle(color: Colors.white)),
             style: TextButton.styleFrom(backgroundColor: Colors.teal),
           ),
